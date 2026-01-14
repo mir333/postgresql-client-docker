@@ -1,11 +1,6 @@
 #!/bin/bash
 
 # Configuration
-DB_HOST="dpg-d5jkq924d50c73d2mh10-a.frankfurt-postgres.render.com"
-DB_PORT="5432"
-DB_USER="gostar"
-DATABASE_NAME="gostar_03zx"
-
 BACKUP_DIR="/home/ubuntu/backup"
 S3_BUCKET="gostar-db-backup"
 AWS_REGION="eu-central-1"

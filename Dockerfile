@@ -6,10 +6,12 @@ RUN apt-get update \
     && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.gpg \
     && echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.gpg] http://apt.postgresql.org/pub/repos/apt noble-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
     && apt-get update \
-    && apt-get install -y --no-install-recommends nodejs npm postgresql-client-17 \
+    && apt-get install -y --no-install-recommends nodejs npm postgresql-client-18 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
+
+COPY backup-new.sh /app
 
 RUN cat > server.js <<'EOF'
 const http = require('http');
