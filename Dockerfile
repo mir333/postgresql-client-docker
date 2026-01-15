@@ -15,13 +15,31 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2
 RUN unzip awscliv2.zip && ./aws/install
 
 COPY backup-new.sh /app
+RUN chmod +x /app/backup-new.sh
 
 RUN cat > server.js <<'EOF'
 const http = require('http');
+const fs = require('fs');
 
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
 
 const server = http.createServer((req, res) => {
+  if (req.method === 'GET' && req.url === '/backup.log') {
+    fs.readFile('/app/backup.log', 'utf8', (err, data) => {
+      if (err) {
+        res.statusCode = err.code === 'ENOENT' ? 404 : 500;
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        res.end('backup.log not available');
+        return;
+      }
+
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.end(data);
+    });
+    return;
+  }
+
   res.statusCode = 200;
   res.setHeader('Content-Type', 'application/json');
   res.end(JSON.stringify({ ok: true }));
@@ -32,4 +50,4 @@ EOF
 
 EXPOSE 3000
 
-CMD ["node", "/app/server.js"]
+CMD ["/bin/bash", "-c", "/app/backup-new.sh > /app/backup.log 2>&1 && exec node /app/server.js"]
