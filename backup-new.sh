@@ -19,21 +19,35 @@ fi
 
 mkdir -p "$BACKUP_DIR" || { echo "Error: Could not create backup directory $BACKUP_DIR. Exiting."; exit 1; }
 
+DUMP_DIR="$BACKUP_DIR/dump_$TIMESTAMP"
+
 pg_dump \
     --host="$DB_HOST" \
     --port="$DB_PORT" \
     --username="$DB_USER" \
-    --column-inserts \
+    --format=directory \
+    --jobs=2 \
     --data-only \
-    "$DATABASE_NAME" \
-| gzip \
-> "$GZIPPED_FILE"
+    --file="$DUMP_DIR" \
+    "$DATABASE_NAME"
 
 if [ $? -ne 0 ]; then
-    echo "Error: Database backup failed. No file created at $GZIPPED_FILE. Exiting."
+    echo "Error: Database backup failed. Exiting."
+    rm -rf "$DUMP_DIR"
     exit 1
 fi
 
+echo "Dump complete. Compressing to $GZIPPED_FILE..."
+
+tar -czf "$GZIPPED_FILE" -C "$BACKUP_DIR" "dump_$TIMESTAMP"
+
+if [ $? -ne 0 ]; then
+    echo "Error: Compression failed. Exiting."
+    rm -rf "$DUMP_DIR"
+    exit 1
+fi
+
+rm -rf "$DUMP_DIR"
 echo "Backup created: $GZIPPED_FILE"
 
 echo "Uploading $BACKUP_FILENAME to s3://$S3_BUCKET/..."
